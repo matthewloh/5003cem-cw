@@ -39,7 +39,7 @@ class BinarySearchTree:
     def is_empty(self) -> bool:
         return not self.root
 
-    def __insert(self, timeInUnix: int, item: Order) -> None:
+    def insert(self, timeInUnix: int, item: Order) -> None:
         new_node = Node(timeInUnix, item)  # create new node
         if self.is_empty():  # if BST is empty
             self.root = new_node
@@ -78,7 +78,7 @@ class BinarySearchTree:
 
     def batch_insert(self, orders: list[Order]) -> None:
         for order in orders:
-            self.__insert(order.unixTimestamp, order)
+            self.insert(order.unixTimestamp, order)
 
     def search_by_date_and_time(self, timeInUnix: int) -> Node | None:
         """ 

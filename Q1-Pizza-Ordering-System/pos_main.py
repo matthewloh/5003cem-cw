@@ -17,10 +17,10 @@ when viewing the order details.
 • The system shall demonstrate a good OOP design, data validation and error handling.
 """
 from dataclasses import dataclass, field
-import time
-from typing import List
+import time as time_obj
+from typing import Dict, List
 import datetime as dt
-from pos_constants import TIMEFMT, DATEFMT, DATE_WITH_TIMEFMT
+from pos_constants import *
 from pos_entities import Customer, Pizza, Order
 from pos_BST import BinarySearchTree, Node
 
@@ -29,16 +29,18 @@ from pos_BST import BinarySearchTree, Node
 class PizzaOrderingSystemCLI:
     BST: BinarySearchTree = field(default_factory=BinarySearchTree)
     order_id: int = 0
+    customer_id: int = 0
+    customPizzaCount: int = 1
 
     def init_current_node(self) -> None:
-        currentTime = time.time()
+        currentTime = time_obj.time()
         strTime = dt.datetime.fromtimestamp(currentTime).strftime(TIMEFMT)
         strDate = dt.datetime.fromtimestamp(currentTime).strftime(DATEFMT)
         print(strTime, strDate)
         item = Order(unixTimestamp=int(currentTime),
                      order_id=0, pizzas=[], customer=None)
         current_node = Node(unixTimestamp=int(currentTime), item=item)
-        print(current_node)
+        self.BST.root = current_node
 
     def display_welcome_art(self) -> None:
         msg = f"""
@@ -55,34 +57,247 @@ class PizzaOrderingSystemCLI:
 
     def display_options(self) -> None:
         self.display_welcome_art()
-        self.init_current_node()
         print("Pizza Ordering System")
         print("1. Place an order")
         print("2. View order details")
         print("3. Modify or delete an order")
-        print("4. Exit")
+        print("4. View most forward and backward in time")
+        print("5. Exit")
 
     def place_order(self) -> None:
-        print("Place an order")
-        pizza_code = input("Enter pizza code: ")
-        toppings = input("Enter toppings: ")
-        size = input("Enter size: ")
-        unit_price = float(input("Enter unit price: "))
-        quantity = int(input("Enter quantity: "))
-        customer_id = int(input("Enter customer id: "))
+        """ 
+        1. Get date and time of order
+        2. Get customer details 
+        Order entity:
+            - Create a Customer object
+            - Require multiple pizza or single pizza?
+            - Create a Pizza object
+            - Create an Order object
+        """
+        print("When would you like to place your order?")
+        date = input(
+            "Enter date or leave blank for today (dd/mm/yyyy): ").strip()
+        if date == "":
+            date = dt.datetime.fromtimestamp(
+                time_obj.time()).strftime(DATEFMT)
+        time = input("Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: ").strip().replace(
+            " AM", "AM").replace(" PM", "PM").upper()
+        if time == "":
+            time = dt.datetime.fromtimestamp(
+                time_obj.time()).strftime(TIMEFMT)
+        validation = False
+        while not validation:
+            try:
+                time_obj.strptime(f"{date} {time}", DATE_WITH_TIMEFMT)
+                validation = True
+            except ValueError:
+                print("Invalid date or time format")
+                date = input(
+                    "Enter date or leave blank for today (dd/mm/yyyy): ").strip()
+                if date == "":
+                    date = dt.datetime.fromtimestamp(
+                        time_obj.time()).strftime(DATEFMT)
+                time = input("Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: ").strip().replace(
+                    " AM", "AM").replace(" PM", "PM").upper()
+                if time == "":
+                    time = dt.datetime.fromtimestamp(
+                        time_obj.time()).strftime(TIMEFMT)
+        unixTimestamp = int(time_obj.mktime(time_obj.strptime(
+            f"{date} {time}", DATE_WITH_TIMEFMT)))
+        print(unixTimestamp)
+        dateTime = dt.datetime.fromtimestamp(unixTimestamp)
+        print(dateTime.strftime(DATE_WITH_TIMEFMT))
+        print("How many pizzas would you like to order?")
+        num_pizzas = int(input("Enter number of pizzas: "))
+        self.pizzaList: List[Pizza] = []
+        self.pizzaNum = 0
+        self.display_pizza_options(num_pizzas=num_pizzas)
         name = input("Enter name: ")
         address = input("Enter address: ")
         contact_number = input("Enter contact number: ")
-        customer = Customer(customer_id, name, address, contact_number)
-        pizza = Pizza(pizza_code, toppings, size, unit_price, quantity)
-        order = Order(self.order_id, pizza, customer)
-        self.BST.insert(Node(order))
+        order = Order(
+            unixTimestamp=unixTimestamp,
+            order_id=self.order_id,
+            pizzas=self.pizzaList,
+            customer=Customer(
+                id=self.customer_id,
+                name=name,
+                address=address,
+                contact_number=contact_number
+            )
+        )
+        self.BST.insert(timeInUnix=unixTimestamp, item=order)
+        self.customer_id += 1
         self.order_id += 1
 
-    def view_order_details(self) -> None:
-        print("View order details")
-        order_id = int(input("Enter order id: "))
-        node = self.BST.search_by_order_id(order_id)
+    def display_pizza_options(self, num_pizzas: int) -> None:
+        while True and self.pizzaNum < num_pizzas:
+            msg = f"""
+Pizza {self.pizzaNum + 1} / {num_pizzas}
+.___________________________________________________________________________.
+|  Pizza Menu - Type the number of the pizza you would like to order.       |
+|  [1] Pepperoni Pizza - Pepperoni, Cheese(x2) -------------------- RM15.00 |
+|  [2] Hawaiian Pizza - Ham, Pineapple, Cheese -------------------- RM12.00 | 
+|  [3] Vegetarian Pizza - Mushroom, Onion, Capsicum, Cheese ------- RM09.00 |
+|  [4] Custom Pizza                                                         |
+|                                                           [q] Cancel      |
+|                                                           [w] View Pizzas |
+.___________________________________________________________________________.
+"""
+            print(msg)
+            choice = input("Enter your choice: ")
+            if choice == "1":
+                newPizza = Pizza(
+                    pizza_code=f"PEP_{self.order_id}-{self.pizzaNum}",
+                    toppings={
+                        PEPPERONI: 1,
+                        CHEESE: 2
+                    },
+                    size=LARGE,
+                    unit_price=15.00,
+                )
+                self.pizzaList.append(newPizza)
+                self.pizzaNum += 1
+            elif choice == "2":
+                newPizza = Pizza(
+                    pizza_code=f"HAW_{self.order_id}-{self.pizzaNum}",
+                    toppings={
+                        HAM: 1,
+                        PINEAPPLE: 1,
+                        CHEESE: 1
+                    },
+                    size=LARGE,
+                    unit_price=12.00,
+                )
+                self.pizzaList.append(newPizza)
+                self.pizzaNum += 1
+            elif choice == "3":
+                newPizza = Pizza(
+                    pizza_code=f"VEG_{self.order_id}-{self.pizzaNum}",
+                    toppings={
+                        MUSHROOM: 1,
+                        ONION: 1,
+                        CAPSICUM: 1,
+                        CHEESE: 1
+                    },
+                    size=LARGE,
+                    unit_price=9.00,
+                )
+                self.pizzaList.append(newPizza)
+                self.pizzaNum += 1
+            elif choice == "4":
+                self.customPizzaId = f"CUS{self.order_id}-{self.customPizzaCount}"
+                totalToppings = int(
+                    input("How many toppings would you like to add? "))
+                self.toppingOptions = {}
+                self.toppingNum = 0
+                for i in range(totalToppings):
+                    self.display_topping_options(
+                        totalToppings=totalToppings)
+                price = self.get_custom_pizza_price()
+                newPizza = Pizza(
+                    pizza_code=self.customPizzaId,
+                    toppings=self.toppingOptions,
+                    size=LARGE,
+                    unit_price=price,
+                )
+                self.pizzaList.append(newPizza)
+                print(f"Custom Pizza #{self.customPizzaCount} added")
+                self.customPizzaCount += 1
+                self.pizzaNum += 1
+            elif choice == "q":
+                print("Exit")
+                break
+            elif choice == "w":
+                print("Viewing pizzas")
+                for pizza in self.pizzaList:
+                    print(pizza)
+            else:
+                print("Invalid choice")
+
+    def display_topping_options(self, totalToppings: int) -> List[Dict[str, int]]:
+        while True and self.toppingNum < totalToppings:
+            msg = f"""
+Topping #{self.toppingNum + 1} / {totalToppings} 
+.___________________________________________________________________________.
+|  Topping Menu - Type the number of the topping you would like to add.     |
+|  Topping ------------------------------------------------- Price per Unit |
+|  [1] Cheese -------------------------------------------------------RM5.00 |
+|  [2] Pepperoni ----------------------------------------------------RM5.00 |
+|  [3] Ham --------------------------------------------------------- RM4.00 | 
+|  [4] Pineapple ----------------------------------------------------RM3.00 |
+|  [q] Mushroom -----------------------------------------------------RM2.00 |
+|  [w] Onion --------------------------------------------------------RM1.00 |
+|  [e] Capsicum -----------------------------------------------------RM1.00 |
+|                                                                           |
+|                                                     [z] Reset             |
+|                                                     [x] List all Toppings |
+|                                                     [c] Cancel            |
+.___________________________________________________________________________.
+"""
+            print(msg)
+            choice = input("Enter your choice: ")
+            if choice == "1":
+                self.add_topping_option(CHEESE)
+            elif choice == "2":
+                self.add_topping_option(PEPPERONI)
+            elif choice == "3":
+                self.add_topping_option(HAM)
+            elif choice == "4":
+                self.add_topping_option(PINEAPPLE)
+            elif choice == "q":
+                self.add_topping_option(MUSHROOM)
+            elif choice == "w":
+                self.add_topping_option(ONION)
+            elif choice == "e":
+                self.add_topping_option(CAPSICUM)
+            elif choice == "z":
+                self.reset_topping_options()
+            elif choice == "x":
+                self.list_topping_options()
+            elif choice == "c":
+                print("Exit")
+                break
+            else:
+                print("Invalid choice")
+
+    def add_topping_option(self, topping: str) -> None:
+        if topping in self.toppingOptions:
+            self.toppingOptions[topping] += 1
+        else:
+            self.toppingOptions[topping] = 1
+        self.toppingNum += 1
+
+    def get_custom_pizza_price(self) -> float:
+        total = 0
+        for topping, qty in self.toppingOptions.items():
+            if topping == CHEESE or topping == PEPPERONI:
+                total += 5.00 * qty
+            elif topping == HAM:
+                total += 4.00 * qty
+            elif topping == PINEAPPLE:
+                total += 3.00 * qty
+            elif topping == MUSHROOM:
+                total += 2.00 * qty
+            elif topping == ONION or topping == CAPSICUM:
+                total += 1.00 * qty
+        return total
+
+    def list_topping_options(self) -> None:
+        print("Current toppings:")
+        for topping, qty in self.toppingOptions.items():
+            print(f"{topping} - {qty}")
+
+    def reset_topping_options(self) -> None:
+        self.toppingOptions = {}
+        self.toppingNum = 0
+
+    def view_order_details_by_date(self) -> None:
+        print("Viewing order details by date")
+        print("When did you place your order?")
+        date = input("Enter date (dd/mm/yyyy): ")
+
+        node = self.BST.search_by_date_and_time()
         if node:
             order = node.item
             pizzas = order.pizzas
@@ -103,13 +318,14 @@ class PizzaOrderingSystemCLI:
 
 if __name__ == "__main__":
     cli = PizzaOrderingSystemCLI()
+    cli.init_current_node()
     while True:
         cli.display_options()
         choice = int(input("Enter your choice: "))
         if choice == 1:
             cli.place_order()
         elif choice == 2:
-            cli.view_order_details()
+            cli.view_order_details_by_date()
         elif choice == 3:
             print("Modify or delete an order")
             order_id = int(input("Enter order id: "))
@@ -117,7 +333,7 @@ if __name__ == "__main__":
             if node:
                 order = node.item
                 print(f"Order ID: {order.order_id}")
-                print(f"Pizza Code: {order.pizza.pizza_code}")
+                print(f"Pizza Code: {order.pizzas.pizza_code}")
                 print(f"Toppings: {order.pizza.toppings}")
                 print(f"Size: {order.pizza.size}")
                 print(f"Unit Price: {order.pizza.unit_price}")
@@ -154,15 +370,13 @@ if __name__ == "__main__":
                     cli.BST.delete(order_id)
             else:
                 print("Order not found")
-
         elif choice == 4:
+            print("Getting most forward in time")
+            print(cli.BST.get_most_forward_in_time(cli.BST.root))
+            print("Getting most backward in time")
+            print(cli.BST.get_most_backward_in_time(cli.BST.root))
+        elif choice == 5:
             print("Exit")
             break
-
         else:
             print("Invalid choice")
-
-        print()
-        print()
-        print()
-        print()

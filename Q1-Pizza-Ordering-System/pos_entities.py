@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from typing import List
+import typing
+from typing import Dict, List, TypedDict, Union
 from datetime import date
 from enum import StrEnum, auto
 
@@ -14,11 +15,10 @@ class Customer:
 
 @dataclass
 class Pizza:
-    pizza_code: str
-    toppings: list(dict[str, float])
-    size: str
-    unit_price: float
-    quantity: int
+    pizza_code: str 
+    toppings: Dict[str, int] = field(default_factory=dict)
+    size: str = "Large"
+    unit_price: float = 0.0
 
 
 @dataclass
