@@ -31,5 +31,5 @@ class Order:
     def display_order_amount(self) -> float:
         total = 0
         for pizza in self.pizzas:
-            total += pizza.unit_price * pizza.quantity
+            total += pizza.unit_price
         return total

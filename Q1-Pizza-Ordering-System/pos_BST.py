@@ -5,7 +5,7 @@ from typing import Any, Iterable
 
 from pos_entities import Order
 import datetime as dt
-from pos_constants import TIMEFMT, DATEFMT, DATE_WITH_TIMEFMT
+from pos_constants import TIMEFMT, DATEFMT, DATE_WITH_TIMEFMT, NOTSET
 
 
 @dataclass
@@ -81,7 +81,7 @@ class BinarySearchTree:
             self.insert(order.unixTimestamp, order)
 
     def search_by_date_and_time(self, timeInUnix: int) -> Node | None:
-        """ 
+        """
         Search for the node with the specified value and return it.
         """
         if self.is_empty():
@@ -92,7 +92,7 @@ class BinarySearchTree:
         return curr
 
     def search_by_order_id(self, order_id: int) -> Node | None:
-        """ 
+        """
         Search for the node with the specified value and return it.
         """
         if self.is_empty():
@@ -132,9 +132,91 @@ class BinarySearchTree:
 
         return node
 
+    def get_left_and_right_of_root(self) -> tuple[Node | None, Node | None]:
+        """
+        Get the left and right nodes of the root.
+        """
+        return (self.root.left, self.root.right)
+
+    def get_a_node_using_today(
+        self,
+        customerId: int,
+        orderId: int,
+    ) -> Node | None:
+        """
+        Traverse as you would a linear list, because we don't know if the node is on the left or right side of the BST.
+        """
+        customerId = int(customerId)
+        orderId = int(orderId)
+        # Root is always None Customer and None Order, so just skip it
+        curr = self.root.left
+        if curr is None:  # BST has no added nodes (left)
+            return None
+        elif curr.item.customer.id == customerId and curr.item.order_id == orderId:  # it itself is the node
+            return curr
+        elif curr.item.customer.id != customerId and curr.item.order_id != orderId:  # it itself is not the node
+            while curr is not None:  # traverse left
+                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                    return curr
+                curr = curr.right  # traverse right
+        else:  # it itself is not the node
+            while curr is not None:  # traverse right
+                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                    return curr
+                curr = curr.left
+
+    def go_before_today_until_customerId_or_orderId(
+        self,
+        customerId: int,
+        orderId: int,
+    ) -> Node | None:
+        """
+        Returns a node where the customerId or orderId matches the specified values.
+        The node returned is obtained by going through the left side of the BST.
+        Requires either customerId or orderId to be specified.
+        """
+        customerId = int(customerId)
+        orderId = int(orderId)
+        curr = self.root.left
+        if curr is None:
+            return None
+        # print(type(curr.item.customer.id), type(customerId))
+        # print(type(curr.item.order_id), type(orderId))
+        # <class 'int'> <class 'str'>
+        # <class 'int'> <class 'str'>
+        if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+            return curr
+        else:
+            while curr is not None:
+                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                    return curr
+                curr = curr.left
+
+    def go_after_today_until_customerId_or_orderId(
+        self,
+        customerId: str | int = NOTSET,
+        orderId: str | int = NOTSET,
+    ) -> Node | None:
+        """
+        View order details using today's date.
+        Requires either customerId or orderId to be specified.
+        """
+        customerId = int(customerId)
+        orderId = int(orderId)
+        curr = self.root.right
+        if curr is None:
+            return None
+        if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+            return curr
+        else:
+            while curr is not None:
+                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                    return curr
+                curr = curr.right
+
     def remove_by_date_and_time(self, timeInUnix: int) -> bool:
-        """ 
-        Remove the node with the specified value and return its Order object. 
+        """
+        Remove the node with the specified value and return its Order object.
         """
         if self.is_empty():
             raise IndexError("BST is empty")
@@ -144,8 +226,8 @@ class BinarySearchTree:
         return self.remove(node)
 
     def remove_by_order_id(self, order_id: int) -> bool:
-        """ 
-        Remove the node with the specified value and return its Order object. 
+        """
+        Remove the node with the specified value and return its Order object.
         """
         if self.is_empty():
             raise IndexError("BST is empty")

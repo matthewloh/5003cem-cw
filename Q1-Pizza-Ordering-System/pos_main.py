@@ -37,8 +37,9 @@ class PizzaOrderingSystemCLI:
         strTime = dt.datetime.fromtimestamp(currentTime).strftime(TIMEFMT)
         strDate = dt.datetime.fromtimestamp(currentTime).strftime(DATEFMT)
         print(strTime, strDate)
-        item = Order(unixTimestamp=int(currentTime),
-                     order_id=0, pizzas=[], customer=None)
+        item = Order(
+            unixTimestamp=int(currentTime), order_id=69, pizzas=[], customer=None
+        )
         current_node = Node(unixTimestamp=int(currentTime), item=item)
         self.BST.root = current_node
 
@@ -65,26 +66,25 @@ class PizzaOrderingSystemCLI:
         print("5. Exit")
 
     def place_order(self) -> None:
-        """ 
-        1. Get date and time of order
-        2. Get customer details 
-        Order entity:
-            - Create a Customer object
-            - Require multiple pizza or single pizza?
-            - Create a Pizza object
-            - Create an Order object
-        """
-        print("When would you like to place your order?")
+        print("When would you like to place your order? (q to cancel)")
         date = input(
             "Enter date or leave blank for today (dd/mm/yyyy): ").strip()
         if date == "":
-            date = dt.datetime.fromtimestamp(
-                time_obj.time()).strftime(DATEFMT)
-        time = input("Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: ").strip().replace(
-            " AM", "AM").replace(" PM", "PM").upper()
+            date = dt.datetime.fromtimestamp(time_obj.time()).strftime(DATEFMT)
+        elif date == "q":
+            print("Exit")
+            return
+        time = (
+            input(
+                "Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: "
+            )
+            .strip()
+            .replace(" AM", "AM")
+            .replace(" PM", "PM")
+            .upper()
+        )
         if time == "":
-            time = dt.datetime.fromtimestamp(
-                time_obj.time()).strftime(TIMEFMT)
+            time = dt.datetime.fromtimestamp(time_obj.time()).strftime(TIMEFMT)
         validation = False
         while not validation:
             try:
@@ -93,17 +93,27 @@ class PizzaOrderingSystemCLI:
             except ValueError:
                 print("Invalid date or time format")
                 date = input(
-                    "Enter date or leave blank for today (dd/mm/yyyy): ").strip()
+                    "Enter date or leave blank for today (dd/mm/yyyy): "
+                ).strip()
                 if date == "":
                     date = dt.datetime.fromtimestamp(
                         time_obj.time()).strftime(DATEFMT)
-                time = input("Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: ").strip().replace(
-                    " AM", "AM").replace(" PM", "PM").upper()
+                time = (
+                    input(
+                        "Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: "
+                    )
+                    .strip()
+                    .replace(" AM", "AM")
+                    .replace(" PM", "PM")
+                    .upper()
+                )
                 if time == "":
                     time = dt.datetime.fromtimestamp(
                         time_obj.time()).strftime(TIMEFMT)
-        unixTimestamp = int(time_obj.mktime(time_obj.strptime(
-            f"{date} {time}", DATE_WITH_TIMEFMT)))
+        unixTimestamp = int(
+            time_obj.mktime(time_obj.strptime(
+                f"{date} {time}", DATE_WITH_TIMEFMT))
+        )
         print(unixTimestamp)
         dateTime = dt.datetime.fromtimestamp(unixTimestamp)
         print(dateTime.strftime(DATE_WITH_TIMEFMT))
@@ -123,11 +133,41 @@ class PizzaOrderingSystemCLI:
                 id=self.customer_id,
                 name=name,
                 address=address,
-                contact_number=contact_number
-            )
+                contact_number=contact_number,
+            ),
         )
         self.BST.insert(timeInUnix=unixTimestamp, item=order)
-        self.customer_id += 1
+        allPizzas = ""
+        for pizza in self.pizzaList:
+            allPizzas += f"{pizza.pizza_code} - {pizza.toppings} - {pizza.size} - {pizza.unit_price} \n"
+        successMsg = f"""
+._________________________________________________________________________.
+|  ____ _________ ____ ____ ____ ____ ____ _________ ____ ____ ____ ____  |
+| || A |||       |||P |||i |||z |||z |||a |||       |||C |||a |||k |||e | |
+| ||___|||_______|||__|||__|||__|||__|||__|||_______|||__|||__|||__|||__| |
+| |/___\|/_______\|/__\|/__\|/__\|/__\|/__\|/_______\|/__\|/__\|/__\|/__\ |
+|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+|  Your order has been placed!                                            |
+|  Here are your order details:                                           |
+|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+   Order ID: {self.order_id}
+   Customer ID: {self.customer_id}                                        
+   Name: {name}                                                           
+   Address: {address}                                                     
+   Contact Number: {contact_number}                                       
+   Order Date and Time: {dateTime.strftime(DATE_WITH_TIMEFMT)}            
+   Order Amount: {order.display_order_amount()}                           
+   Pizzas:                                                                
+{allPizzas}                                                            
+|  Thank you for ordering with us!                                        |
+|  Please come again!                                                     |
+._________________________________________________________________________.
+
+"""
+        print(successMsg)
+        ask = input("Would you like to log out from this customerId? (y/n): ")
+        if ask == "y":
+            self.customer_id += 1
         self.order_id += 1
 
     def display_pizza_options(self, num_pizzas: int) -> None:
@@ -149,10 +189,7 @@ Pizza {self.pizzaNum + 1} / {num_pizzas}
             if choice == "1":
                 newPizza = Pizza(
                     pizza_code=f"PEP_{self.order_id}-{self.pizzaNum}",
-                    toppings={
-                        PEPPERONI: 1,
-                        CHEESE: 2
-                    },
+                    toppings={PEPPERONI: 1, CHEESE: 2},
                     size=LARGE,
                     unit_price=15.00,
                 )
@@ -161,11 +198,7 @@ Pizza {self.pizzaNum + 1} / {num_pizzas}
             elif choice == "2":
                 newPizza = Pizza(
                     pizza_code=f"HAW_{self.order_id}-{self.pizzaNum}",
-                    toppings={
-                        HAM: 1,
-                        PINEAPPLE: 1,
-                        CHEESE: 1
-                    },
+                    toppings={HAM: 1, PINEAPPLE: 1, CHEESE: 1},
                     size=LARGE,
                     unit_price=12.00,
                 )
@@ -174,12 +207,7 @@ Pizza {self.pizzaNum + 1} / {num_pizzas}
             elif choice == "3":
                 newPizza = Pizza(
                     pizza_code=f"VEG_{self.order_id}-{self.pizzaNum}",
-                    toppings={
-                        MUSHROOM: 1,
-                        ONION: 1,
-                        CAPSICUM: 1,
-                        CHEESE: 1
-                    },
+                    toppings={MUSHROOM: 1, ONION: 1, CAPSICUM: 1, CHEESE: 1},
                     size=LARGE,
                     unit_price=9.00,
                 )
@@ -192,8 +220,7 @@ Pizza {self.pizzaNum + 1} / {num_pizzas}
                 self.toppingOptions = {}
                 self.toppingNum = 0
                 for i in range(totalToppings):
-                    self.display_topping_options(
-                        totalToppings=totalToppings)
+                    self.display_topping_options(totalToppings=totalToppings)
                 price = self.get_custom_pizza_price()
                 newPizza = Pizza(
                     pizza_code=self.customPizzaId,
@@ -293,30 +320,134 @@ Topping #{self.toppingNum + 1} / {totalToppings}
         self.toppingNum = 0
 
     def view_order_details_by_date(self) -> None:
-        print("Viewing order details by date")
-        print("When did you place your order?")
-        date = input("Enter date (dd/mm/yyyy): ")
+        self.currentRootDate = dt.datetime.fromtimestamp(
+            self.BST.root.item.unixTimestamp
+        ).strftime(DATE_WITH_TIMEFMT)
+        self.currentCustomerId = NOTSET
+        self.currentOrderId = NOTSET
+        self.timeStampToSearch = NOTSET
+        self.searchedForDate = NOTSET
+        while True:
+            msg = f"""
+|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+    Current Root Date: {self.currentRootDate + f" - {self.BST.root.item.unixTimestamp}"} 
+    Searched For Date: {self.searchedForDate}                              
+    Current Customer ID: {self.currentCustomerId} 
+    Current Order ID: {self.currentOrderId}                                 
+|___________________________________________________________________________|
+|  Date Menu - Type the number of the date you would like to view.          |
+|                                                                           |
+|  [1] Today - Check for your orders placed today                           |
+|  [2] Before today - Get your order if it was placed before today          | 
+|  [3] After today - Get your order if it was placed after today            |
+|  [4] I don't know the date, but I have an orderId (Linear Search!)        |
+|  [5] I don't know the date, but I have a customerId (Linear Search!)      |
+|                                                                           | 
+|  [q] Enter date - Input a date                                            |
+|  [w] Enter date and time - Input a date and time                          |
+|  [e] Enter my customerId and/or orderId                                   | 
+|                                                                [c] Cancel |
+.___________________________________________________________________________. 
+"""
+            print(msg)
+            choice = input("Enter your choice (c to exit): ")
+            if choice == "1":
+                print("Viewing today's orders")
+                node = self.BST.get_a_node_using_today(
+                    customerId=self.currentCustomerId,
+                    orderId=self.currentOrderId,
+                )
+                if node:
+                    print("Order found")
+                    print(node.item)
+                else:
+                    print("Order not found")
+            elif choice == "2":
+                print("Viewing orders before today")
+                node = self.BST.go_before_today_until_customerId_or_orderId(
+                    customerId=self.currentCustomerId, orderId=self.currentOrderId
+                )
+                if node:
+                    print(node.item.pizzas)
+                else:
+                    print("Order not found")
+            elif choice == "3":
+                print("Viewing orders after today")
+                node = self.BST.go_after_today_until_customerId_or_orderId(
+                    searchedTimeStamp=self.BST.root.item.unixTimestamp,
+                    customerId=self.currentCustomerId,
+                    orderId=self.currentOrderId,
+                )
+            elif choice == "4":
+                print("Viewing orders by order id")
+                self.BST.view_order_details_by_order_id()
+            elif choice == "5":
+                print("Viewing orders by customer id")
+                self.BST.view_order_details_by_customer_id()
+            elif choice == "q":
+                print("Inputting date, leave blank to cancel")
+                date = input("Enter date (dd/mm/yyyy): ")
+                self.timeStampToSearch = int(
+                    time_obj.mktime(time_obj.strptime(f"{date}", DATEFMT))
+                )
+                self.searchedForDate = (
+                    dt.datetime.fromtimestamp(
+                        self.timeStampToSearch).strftime(DATEFMT)
+                    + f" - {self.timeStampToSearch}"
+                )
+            elif choice == "w":
+                print("Inputting date and time, leave blank to cancel")
+                date = input("Enter date (dd/mm/yyyy): ")
+                time = (
+                    input("Enter time (hh:mma): ")
+                    .strip()
+                    .replace(" AM", "AM")
+                    .replace(" PM", "PM")
+                    .upper()
+                )
+                self.timeStampToSearch = int(
+                    time_obj.mktime(
+                        time_obj.strptime(f"{date} {time}", DATE_WITH_TIMEFMT)
+                    )
+                )
+                self.searchedForDate = (
+                    dt.datetime.fromtimestamp(self.timeStampToSearch).strftime(
+                        DATE_WITH_TIMEFMT
+                    )
+                    + f" - {self.timeStampToSearch}"
+                )
+            elif choice == "e":
+                while True:
+                    print(
+                        "Inputting customer id and order id (leave blank if not known)"
+                    )
+                    customerId = input("Enter customer id: ")
+                    orderId = input("Enter order id: ")
+                    if orderId == "" and customerId != "":
+                        self.currentOrderId = NOTSET
+                        self.currentCustomerId = customerId
+                        break
+                    elif customerId == "" and orderId != "":
+                        self.currentCustomerId = NOTSET
+                        self.currentOrderId = orderId
+                        break
+                    elif orderId == "" and customerId == "":
+                        self.currentCustomerId = NOTSET
+                        self.currentOrderId = NOTSET
+                        print("Both order id and customer id are blank")
+                        break
+                    else:
+                        self.currentCustomerId = customerId
+                        self.currentOrderId = orderId
+                        break
+            elif choice == "c":
+                print("Exit")
+                return
+            else:
+                print("Invalid choice")
 
-        node = self.BST.search_by_date_and_time()
-        if node:
-            order = node.item
-            pizzas = order.pizzas
-            print(f"Order ID: {order.order_id}")
-            print(f"Pizza Code: {order.pizza.pizza_code}")
-            print(f"Toppings: {order.pizza.toppings}")
-            print(f"Size: {order.pizza.size}")
-            print(f"Unit Price: {order.pizza.unit_price}")
-            print(f"Quantity: {order.pizza.quantity}")
-            print(f"Customer ID: {order.customer.id}")
-            print(f"Name: {order.customer.name}")
-            print(f"Address: {order.customer.address}")
-            print(f"Contact Number: {order.customer.contact_number}")
-            print(f"Amount: {order.display_order_amount()}")
-        else:
-            print("Order not found")
 
-
-if __name__ == "__main__":
+def main():
     cli = PizzaOrderingSystemCLI()
     cli.init_current_node()
     while True:
@@ -334,7 +465,7 @@ if __name__ == "__main__":
                 order = node.item
                 print(f"Order ID: {order.order_id}")
                 print(f"Pizza Code: {order.pizzas.pizza_code}")
-                print(f"Toppings: {order.pizza.toppings}")
+                print(f"Toppings: {order.toppings}")
                 print(f"Size: {order.pizza.size}")
                 print(f"Unit Price: {order.pizza.unit_price}")
                 print(f"Quantity: {order.pizza.quantity}")
@@ -380,3 +511,7 @@ if __name__ == "__main__":
             break
         else:
             print("Invalid choice")
+
+
+if __name__ == "__main__":
+    main()

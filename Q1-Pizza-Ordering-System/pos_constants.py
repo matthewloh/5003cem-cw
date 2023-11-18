@@ -27,3 +27,6 @@ MUSHROOM = "Mushroom"
 ONION = "Onion"
 CAPSICUM = "Capsicum"
 CHEESE = "Cheese"
+
+
+NOTSET = "Not set"
