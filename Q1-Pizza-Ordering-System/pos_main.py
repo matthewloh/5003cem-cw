@@ -60,10 +60,9 @@ class PizzaOrderingSystemCLI:
         self.display_welcome_art()
         print("Pizza Ordering System")
         print("1. Place an order")
-        print("2. View order details")
-        print("3. Modify or delete an order")
-        print("4. View most forward and backward in time")
-        print("5. Exit")
+        print("2. Search for an order to modify/delete")
+        print("3. View most forward and backward in time")
+        print("4. Exit")
 
     def place_order(self) -> None:
         print("When would you like to place your order? (q to cancel)")
@@ -335,88 +334,57 @@ Topping #{self.toppingNum + 1} / {totalToppings}
     Current Customer ID: {self.currentCustomerId} 
     Current Order ID: {self.currentOrderId}                                 
 |___________________________________________________________________________|
-|  Date Menu - Type the number of the date you would like to view.          |
+|  Options to obtain your order                                             |
 |                                                                           |
-|  [1] Today - Check for your orders placed today                           |
-|  [2] Before today - Get your order if it was placed before today          | 
-|  [3] After today - Get your order if it was placed after today            |
-|  [4] I don't know the date, but I have an orderId (Linear Search!)        |
-|  [5] I don't know the date, but I have a customerId (Linear Search!)      |
-|                                                                           | 
-|  [q] Enter date - Input a date                                            |
-|  [w] Enter date and time - Input a date and time                          |
-|  [e] Enter my customerId and/or orderId                                   | 
+|  [1] No date specified - Search exhaustively ~O(n) time complexity        |
+|  [2] Before today - Get your order if it was placed before today ~O(log n)| 
+|  [3] After today - Get your order if it was placed after today ~O(log n)  | 
+|  [q] Get an order by order id                                             |
+|  [w] Get order(s) by using your customerId                                |
+|  [z] Enter my customerId and/or orderId                                   | 
+|  [e] Reset my customerId and/or orderId                                   |
 |                                                                [c] Cancel |
 .___________________________________________________________________________. 
 """
             print(msg)
             choice = input("Enter your choice (c to exit): ")
             if choice == "1":
-                print("Viewing today's orders")
+                print("Searching linearly")
                 node = self.BST.get_a_node_using_today(
                     customerId=self.currentCustomerId,
                     orderId=self.currentOrderId,
                 )
-                if node:
-                    print("Order found")
-                    print(node.item)
-                else:
-                    print("Order not found")
+                self.BST.load_node_details(
+                    node) if node else print("Order not found")
             elif choice == "2":
-                print("Viewing orders before today")
+                print("Searching orders before today")
                 node = self.BST.go_before_today_until_customerId_or_orderId(
                     customerId=self.currentCustomerId, orderId=self.currentOrderId
                 )
-                if node:
-                    print(node.item.pizzas)
-                else:
-                    print("Order not found")
+                self.BST.load_node_details(
+                    node) if node else print("Order not found")
             elif choice == "3":
-                print("Viewing orders after today")
+                print("Searching orders after today")
                 node = self.BST.go_after_today_until_customerId_or_orderId(
-                    searchedTimeStamp=self.BST.root.item.unixTimestamp,
-                    customerId=self.currentCustomerId,
-                    orderId=self.currentOrderId,
+                    customerId=self.currentCustomerId, orderId=self.currentOrderId
                 )
-            elif choice == "4":
-                print("Viewing orders by order id")
-                self.BST.view_order_details_by_order_id()
-            elif choice == "5":
-                print("Viewing orders by customer id")
-                self.BST.view_order_details_by_customer_id()
+                self.BST.load_node_details(
+                    node) if node else print("Order not found")
             elif choice == "q":
-                print("Inputting date, leave blank to cancel")
-                date = input("Enter date (dd/mm/yyyy): ")
-                self.timeStampToSearch = int(
-                    time_obj.mktime(time_obj.strptime(f"{date}", DATEFMT))
-                )
-                self.searchedForDate = (
-                    dt.datetime.fromtimestamp(
-                        self.timeStampToSearch).strftime(DATEFMT)
-                    + f" - {self.timeStampToSearch}"
-                )
+                print("View order by order id")
+                self.BST.view_order_details_by_order_id(
+                    orderId=self.currentOrderId)
             elif choice == "w":
-                print("Inputting date and time, leave blank to cancel")
-                date = input("Enter date (dd/mm/yyyy): ")
-                time = (
-                    input("Enter time (hh:mma): ")
-                    .strip()
-                    .replace(" AM", "AM")
-                    .replace(" PM", "PM")
-                    .upper()
-                )
-                self.timeStampToSearch = int(
-                    time_obj.mktime(
-                        time_obj.strptime(f"{date} {time}", DATE_WITH_TIMEFMT)
-                    )
-                )
-                self.searchedForDate = (
-                    dt.datetime.fromtimestamp(self.timeStampToSearch).strftime(
-                        DATE_WITH_TIMEFMT
-                    )
-                    + f" - {self.timeStampToSearch}"
-                )
-            elif choice == "e":
+                print("Viewing order(s) by customer id")
+                self.BST.view_order_details_by_customer_id(
+                    customerId=self.currentCustomerId)
+            elif choice == "z":
+                print("Inputting customer id and order id")
+                customerId = input("Enter customer id: ")
+                orderId = input("Enter order id: ")
+                self.currentCustomerId = customerId
+                self.currentOrderId = orderId
+            elif choice == "z":
                 while True:
                     print(
                         "Inputting customer id and order id (leave blank if not known)"
@@ -458,55 +426,11 @@ def main():
         elif choice == 2:
             cli.view_order_details_by_date()
         elif choice == 3:
-            print("Modify or delete an order")
-            order_id = int(input("Enter order id: "))
-            node = cli.BST.search_by_order_id(order_id)
-            if node:
-                order = node.item
-                print(f"Order ID: {order.order_id}")
-                print(f"Pizza Code: {order.pizzas.pizza_code}")
-                print(f"Toppings: {order.toppings}")
-                print(f"Size: {order.pizza.size}")
-                print(f"Unit Price: {order.pizza.unit_price}")
-                print(f"Quantity: {order.pizza.quantity}")
-                print(f"Customer ID: {order.customer.id}")
-                print(f"Name: {order.customer.name}")
-
-                print(f"Address: {order.customer.address}")
-                print(f"Contact Number: {order.customer.contact_number}")
-                print(f"Amount: {order.display_order_amount()}")
-                print("1. Modify order")
-                print("2. Delete order")
-                choice = int(input("Enter your choice: "))
-                if choice == 1:
-                    print("Modify order")
-                    pizza_code = input("Enter pizza code: ")
-                    toppings = input("Enter toppings: ")
-                    size = input("Enter size: ")
-                    unit_price = float(input("Enter unit price: "))
-                    quantity = int(input("Enter quantity: "))
-                    customer_id = int(input("Enter customer id: "))
-                    name = input("Enter name: ")
-                    address = input("Enter address: ")
-                    contact_number = input("Enter contact number: ")
-                    customer = Customer(customer_id, name,
-                                        address, contact_number)
-                    pizza = Pizza(pizza_code, toppings,
-                                  size, unit_price, quantity)
-                    order = Order(cli.order_id, pizza, customer)
-                    cli.BST.insert(Node(order))
-                    cli.order_id += 1
-                elif choice == 2:
-                    print("Delete order")
-                    cli.BST.delete(order_id)
-            else:
-                print("Order not found")
-        elif choice == 4:
             print("Getting most forward in time")
             print(cli.BST.get_most_forward_in_time(cli.BST.root))
             print("Getting most backward in time")
             print(cli.BST.get_most_backward_in_time(cli.BST.root))
-        elif choice == 5:
+        elif choice == 4:
             print("Exit")
             break
         else:

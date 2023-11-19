@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any, Iterable, List
 
 from pos_entities import Order
 import datetime as dt
@@ -214,6 +214,206 @@ class BinarySearchTree:
                     return curr
                 curr = curr.right
 
+    def view_order_details_by_order_id(self, orderId: int) -> Node | None:
+        """
+        View order details using today's date.
+        """
+        orderId = int(orderId)
+        # Do an exhaustive search on the left and right side of the BST
+        # because we don't know if the node is on the left or right side of the BST.
+        curr = self.root.left
+        if curr is None:
+            return None
+        if curr.item.order_id == orderId:
+            return curr
+        else:
+            while curr is not None:
+                if curr.item.order_id == orderId:
+                    return curr
+                curr = curr.right
+        curr = self.root.right
+        if curr is None:
+            return None
+        if curr.item.order_id == orderId:
+            return curr
+        else:
+            while curr is not None:
+                if curr.item.order_id == orderId:
+                    return curr
+                curr = curr.right
+
+    def view_order_details_by_customer_id(self, customerId: int) -> List[Node] | None:
+        """
+        View order details using today's date.
+        Returns a list of nodes where the customerId matches the specified value.
+        """
+        found_nodes = []
+        customerId = int(customerId)
+        curr = self.root.left
+        if curr is None:
+            return None
+        if curr.item.customer.id == customerId:
+            found_nodes.append(curr)
+        # Traverse until leaf on both sides of the BST
+        while curr is not None:
+            if curr.item.customer.id == customerId:
+                found_nodes.append(curr)
+            curr = curr.left
+        curr = self.root.right
+        if curr is None:
+            return None
+        if curr.item.customer.id == customerId:
+            found_nodes.append(curr)
+        while curr is not None:
+            if curr.item.customer.id == customerId:
+                found_nodes.append(curr)
+            curr = curr.right
+        return found_nodes
+
+    def load_node_details(self, node: Node) -> None:
+        pizzas = node.item.pizzas
+        pizzaMsg = ""
+        toppingInfo = ""
+        for i, pizza in list(enumerate(pizzas)):
+            pizzaMsg += f"""
+Pizza {i + 1}:
+Pizza ID: {pizza.pizza_code}
+Pizza Size: {pizza.size}
+Pizza Toppings: {toppingInfo}
+Pizza Price: RM{pizza.unit_price}
+"""
+            for ing, qty in pizza.toppings.items():
+                toppingInfo += f"{ing}: {qty}\n"
+        msg = f"""
+Viewing order details for order ID {node.item.order_id}:        
+|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+Customer ID: {node.item.customer.id}
+Customer Name: {node.item.customer.name}
+Customer Address: {node.item.customer.address}
+
+Pizza(s):
+{pizzaMsg}
+|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+[1] Update Order
+[2] Delete Order
+[3] Back
+"""
+        print(msg)
+        while True:
+            choice = input("Enter your choice: ")
+            if choice == "1":
+                self.update_node_pizza(node)
+                break   
+            elif choice == "2":
+                self.delete_node(node)
+                break
+            elif choice == "3":
+                break
+            else:
+                print("Invalid choice. Please try again.")
+
+    def update_node_pizza(self, node: Node) -> None:
+        pizzas = node.item.pizzas
+        pizzaMsg = ""
+        toppingInfo = ""
+        for i, pizza in list(enumerate(pizzas)):
+            for ing, qty in pizza.toppings.items():
+                toppingInfo += f"{ing}: {qty}\n"
+            pizzaMsg += f"""
+Pizza {i + 1}:
+Pizza ID: {pizza.pizza_code}
+Pizza Size: {pizza.size}
+Pizza Toppings: {toppingInfo}
+Pizza Price: RM{pizza.unit_price}
+"""
+        msg = f"""
+Viewing pizzas for order ID {node.item.order_id}:
+{pizzaMsg}
+|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+[1] Modify Pizza Size
+[2] Delete Pizza
+[3] Back
+"""
+        print(msg)
+        while True:
+            choice = input("Enter your choice: ")
+            if choice == "1":
+                self.modify_pizza(node)
+            elif choice == "2":
+                self.delete_pizza(node)
+            elif choice == "3":
+                break
+            else:
+                print("Invalid choice. Please try again.")
+
+    def modify_pizza(self, node: Node) -> None:
+        pizzas = node.item.pizzas
+        whichPizza = int(input("Which pizza do you want to modify? "))
+        if whichPizza > len(pizzas):
+            print("Invalid pizza number.")
+            return
+        pizza = pizzas[whichPizza - 1]
+        print(f"""
+Pizza {whichPizza}:
+Pizza ID: {pizza.pizza_code}
+Pizza Size: {pizza.size}
+Pizza Toppings: {pizza.toppings}
+Pizza Price: RM{pizza.unit_price}
+""")
+        while True:
+            choice = input("Enter your choice: ")
+            if choice == "1":
+                print("MODIFY PIZZA SIZE")
+                size = input("Enter pizza size (Small/Large): ")
+                pizza.size = size
+                print("Pizza size updated.")
+                break
+            elif choice == "2":
+                print("MODIFY PIZZA TOPPINGS")
+                print("Current pizza toppings:")
+                print(pizza.toppings)
+                topping = input("Enter topping to add: ")
+                qty = int(input("Enter quantity: "))
+                pizza.toppings[topping] = qty
+                print("Pizza toppings updated.")
+                break
+            elif choice == "3":
+                break
+            else:
+                print("Invalid choice. Please try again.")
+
+    def delete_pizza(self, node: Node) -> None:
+        pizzas = node.item.pizzas
+        whichPizza = int(input("Which pizza do you want to delete? "))
+        if whichPizza > len(pizzas):
+            print("Invalid pizza number.")
+            return
+        pizza = pizzas[whichPizza - 1]
+        print(f"""
+Pizza {whichPizza}:
+Pizza ID: {pizza.pizza_code}
+Pizza Size: {pizza.size}
+Pizza Toppings: {pizza.toppings}
+Pizza Price: RM{pizza.unit_price}
+""")
+        while True:
+            print("Are you sure you want to delete this pizza?")
+            print("[1] Yes")
+            print("[2] No")
+            choice = input("Enter your choice: ")
+            if choice == "1":
+                node.item.pizzas.remove(pizza)
+                print("Pizza deleted.")
+                break
+            elif choice == "2":
+                break
+            else:
+                print("Invalid choice. Please try again.")
+
+    def delete_node(self, node: Node) -> None:
+        self.remove(node)
+        print("Order deleted.")
+
     def remove_by_date_and_time(self, timeInUnix: int) -> bool:
         """
         Remove the node with the specified value and return its Order object.
@@ -236,8 +436,8 @@ class BinarySearchTree:
             return False
         return self.remove(node)
 
-    def remove(self, unixTimestamp: int) -> Node | None:
-        node = self.search_by_date_and_time(unixTimestamp)
+    def remove(self, node: Node) -> Node | None:
+        unixTimestamp = node.unixTimestamp
         if node is None:
             msg = f"Node with unixTimestamp {dt.datetime.fromtimestamp(unixTimestamp).strftime(DATE_WITH_TIMEFMT)} not found"
             raise ValueError(msg)
@@ -249,9 +449,10 @@ class BinarySearchTree:
             self.__reassign_nodes(node, node.left)
         else:
             tmp_node = self.get_most_forward_in_time(node.left)
-            self.remove_by_date_and_time(tmp_node.unixTimestamp)
-            node.unixTimestamp = tmp_node.unixTimestamp
-            node.item = tmp_node.item
+            self.remove(tmp_node)
+            tmp_node.left = node.left
+            tmp_node.right = node.right
+            self.__reassign_nodes(node, tmp_node)
         # if self.__root == None:  # if BST is empty
         #     return False
 
@@ -328,43 +529,6 @@ class BinarySearchTree:
             return self.preorder_traverse(self.root)
         else:
             return traversal_function(self.root)
-
-    def inorder(self, arr: list, node: Node | None) -> None:
-        """Perform an inorder traversal and append values of the nodes to
-        a list named arr"""
-        if node:
-            self.inorder(arr, node.left)
-            arr.append(node.item)
-            self.inorder(arr, node.right)
-
-    def find_kth_smallest(self, k: int, node: Node) -> int:
-        """Return the kth smallest element in a binary search tree"""
-        arr: list[int] = []
-        # append all values to list using inorder traversal
-        self.inorder(arr, node)
-        return arr[k - 1]
-
-
-def inorder(curr_node: Node | None) -> list[Node]:
-    """
-    inorder (left, self, right)
-    """
-    node_list = []
-    if curr_node is not None:
-        node_list = inorder(curr_node.left) + \
-            [curr_node] + inorder(curr_node.right)
-    return node_list
-
-
-def postorder(curr_node: Node | None) -> list[Node]:
-    """
-    postOrder (left, right, self)
-    """
-    node_list = []
-    if curr_node is not None:
-        node_list = postorder(curr_node.left) + \
-            postorder(curr_node.right) + [curr_node]
-    return node_list
 
 
 if __name__ == "__main__":
