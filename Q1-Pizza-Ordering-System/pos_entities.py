@@ -15,7 +15,7 @@ class Customer:
 
 @dataclass
 class Pizza:
-    pizza_code: str 
+    pizza_code: str
     toppings: Dict[str, int] = field(default_factory=dict)
     size: str = "Large"
     unit_price: float = 0.0

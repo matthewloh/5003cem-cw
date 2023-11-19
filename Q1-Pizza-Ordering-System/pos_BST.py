@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, List
+from typing import List
 
 from pos_entities import Order
 import datetime as dt
-from pos_constants import TIMEFMT, DATEFMT, DATE_WITH_TIMEFMT, NOTSET
+from pos_constants import DATE_WITH_TIMEFMT, NOTSET
 
 
 @dataclass
@@ -25,7 +25,7 @@ class Node:
 class BinarySearchTree:
     root: Node | None = None
 
-    def __reassign_nodes(self, node: Node, new_children: Node | None) -> None:
+    def rearrange_nodes(self, node: Node, new_children: Node | None) -> None:
         if new_children is not None:  # reset its kids
             new_children.parent = node.parent
         if node.parent is not None:  # reset its parent
@@ -61,20 +61,6 @@ class BinarySearchTree:
                     else:
                         parent = parent.right
             new_node.parent = parent  # set parent of new node
-            # while curr != None:  # traversal until leaf
-            #     par = curr  # lagging behind
-            #     if data < curr.item:
-            #         curr = curr.left
-            #     elif data > curr.item:
-            #         curr = curr.right
-            #     else:
-            #         return False  # no allow duplicate value insert
-
-            # if data < par.item:  # par points to the leaf node
-            #     par.left = newNode  # insert as left child
-            # else:
-            #     par.right = newNode  # insert as right child
-        # return True
 
     def batch_insert(self, orders: list[Order]) -> None:
         for order in orders:
@@ -152,16 +138,26 @@ class BinarySearchTree:
         curr = self.root.left
         if curr is None:  # BST has no added nodes (left)
             return None
-        elif curr.item.customer.id == customerId and curr.item.order_id == orderId:  # it itself is the node
+        elif (
+            curr.item.customer.id == customerId and curr.item.order_id == orderId
+        ):  # it itself is the node
             return curr
-        elif curr.item.customer.id != customerId and curr.item.order_id != orderId:  # it itself is not the node
+        elif (
+            curr.item.customer.id != customerId and curr.item.order_id != orderId
+        ):  # it itself is not the node
             while curr is not None:  # traverse left
-                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                if (
+                    curr.item.customer.id == customerId
+                    and curr.item.order_id == orderId
+                ):
                     return curr
                 curr = curr.right  # traverse right
         else:  # it itself is not the node
             while curr is not None:  # traverse right
-                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                if (
+                    curr.item.customer.id == customerId
+                    and curr.item.order_id == orderId
+                ):
                     return curr
                 curr = curr.left
 
@@ -188,7 +184,10 @@ class BinarySearchTree:
             return curr
         else:
             while curr is not None:
-                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                if (
+                    curr.item.customer.id == customerId
+                    and curr.item.order_id == orderId
+                ):
                     return curr
                 curr = curr.left
 
@@ -210,7 +209,10 @@ class BinarySearchTree:
             return curr
         else:
             while curr is not None:
-                if curr.item.customer.id == customerId and curr.item.order_id == orderId:
+                if (
+                    curr.item.customer.id == customerId
+                    and curr.item.order_id == orderId
+                ):
                     return curr
                 curr = curr.right
 
@@ -303,7 +305,7 @@ Pizza(s):
             choice = input("Enter your choice: ")
             if choice == "1":
                 self.update_node_pizza(node)
-                break   
+                break
             elif choice == "2":
                 self.delete_node(node)
                 break
@@ -353,13 +355,15 @@ Viewing pizzas for order ID {node.item.order_id}:
             print("Invalid pizza number.")
             return
         pizza = pizzas[whichPizza - 1]
-        print(f"""
+        print(
+            f"""
 Pizza {whichPizza}:
 Pizza ID: {pizza.pizza_code}
 Pizza Size: {pizza.size}
 Pizza Toppings: {pizza.toppings}
 Pizza Price: RM{pizza.unit_price}
-""")
+"""
+        )
         while True:
             choice = input("Enter your choice: ")
             if choice == "1":
@@ -389,13 +393,15 @@ Pizza Price: RM{pizza.unit_price}
             print("Invalid pizza number.")
             return
         pizza = pizzas[whichPizza - 1]
-        print(f"""
+        print(
+            f"""
 Pizza {whichPizza}:
 Pizza ID: {pizza.pizza_code}
 Pizza Size: {pizza.size}
 Pizza Toppings: {pizza.toppings}
 Pizza Price: RM{pizza.unit_price}
-""")
+"""
+        )
         while True:
             print("Are you sure you want to delete this pizza?")
             print("[1] Yes")
@@ -425,119 +431,20 @@ Pizza Price: RM{pizza.unit_price}
             return False
         return self.remove(node)
 
-    def remove_by_order_id(self, order_id: int) -> bool:
-        """
-        Remove the node with the specified value and return its Order object.
-        """
-        if self.is_empty():
-            raise IndexError("BST is empty")
-        node = self.search_by_order_id(order_id)
-        if node is None:
-            return False
-        return self.remove(node)
-
     def remove(self, node: Node) -> Node | None:
         unixTimestamp = node.unixTimestamp
         if node is None:
             msg = f"Node with unixTimestamp {dt.datetime.fromtimestamp(unixTimestamp).strftime(DATE_WITH_TIMEFMT)} not found"
             raise ValueError(msg)
         if node.left is None and node.right is None:
-            self.__reassign_nodes(node, None)
+            self.rearrange_nodes(node, None)
         elif node.left is None:
-            self.__reassign_nodes(node, node.right)
+            self.rearrange_nodes(node, node.right)
         elif node.right is None:
-            self.__reassign_nodes(node, node.left)
+            self.rearrange_nodes(node, node.left)
         else:
             tmp_node = self.get_most_forward_in_time(node.left)
             self.remove(tmp_node)
             tmp_node.left = node.left
             tmp_node.right = node.right
-            self.__reassign_nodes(node, tmp_node)
-        # if self.__root == None:  # if BST is empty
-        #     return False
-
-        # curr = self.__root
-        # par = None
-        # found = False
-
-        # while curr != None:  # traversal until leaf
-        #     if data == curr.item:
-        #         found = True
-        #         break
-        #     par = curr
-        #     if data < curr.item:
-        #         curr = curr.left
-        #     else:
-        #         curr = curr.right
-
-        # if not found:
-        #     return False
-
-        # # Case 1: Node has no children
-        # if curr.left == None and curr.right == None:
-        #     if curr != self.__root:
-        #         if par.left == curr:
-        #             par.left = None
-        #         else:
-        #             par.right = None
-        #     else:
-        #         self.__root = None
-
-        # # Case 2: Node has one child
-        # elif curr.leftChild == None:
-        #     if curr != self.__root:
-        #         if par.left == curr:
-        #             par.left = curr.rightChild
-        #         else:
-        #             par.right = curr.rightChild
-        #     else:
-        #         self.__root = curr.rightChild
-
-        # elif curr.rightChild == None:
-        #     if curr != self.__root:
-        #         if par.left == curr:
-        #             par.left = curr.leftChild
-        #         else:
-        #             par.right = curr.leftChild
-        #     else:
-        #         self.__root = curr.leftChild
-
-        # # Case 3: Node has two children
-        # else:
-        #     replace = curr.rightChild
-        #     while replace.leftChild != None:
-        #         replace = replace.leftChild
-
-        #     curr.item = replace.item
-        #     self.__remove(replace.item)
-
-        # self.__numOfItem -= 1
-        # return True
-
-    def preorder_traverse(self, node: Node | None) -> Iterable:
-        if node is not None:
-            yield node  # Preorder Traversal
-            yield from self.preorder_traverse(node.left)
-            yield from self.preorder_traverse(node.right)
-
-    def traversal_tree(self, traversal_function=None) -> Any:
-        """
-        This function traversal the tree.
-        You can pass a function to traversal the tree as needed by client code
-        """
-        if traversal_function is None:
-            return self.preorder_traverse(self.root)
-        else:
-            return traversal_function(self.root)
-
-
-if __name__ == "__main__":
-    myBst = BinarySearchTree()
-    # Write a program to ask user to enter 10 numbers and insert into a BST
-    # Call the function displayBST to display the content of BST in inOrder traversal.
-
-    for i in range(10):
-        myBst.insert(int(input("Enter a number: ")))
-    # 57, 40, 10, 13, 36, 71, 95 , 105, 69, 79
-    myBst.displayBST()
-    myBst.displayAll()
+            self.rearrange_nodes(node, tmp_node)
