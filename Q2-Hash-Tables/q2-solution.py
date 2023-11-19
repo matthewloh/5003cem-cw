@@ -108,8 +108,12 @@ class HashTable:
         This method returns the distribution of the hash table
         """
         counter = Counter(
-            [hash_function(
-                item) % self.capacity for item in self.values if item is not None])
+            [
+                hash_function(item) % self.capacity
+                for item in self.values
+                if item is not None
+            ]
+        )
         self.mean = np.mean(list(counter.values()))
         self.std_dev = np.std(list(counter.values()))
         print(f"Mean: {self.mean}, Standard Deviation: {self.std_dev}")
@@ -119,9 +123,7 @@ class HashTable:
         """
         This method returns the distribution of the hash table
         """
-        counter = Counter(
-            [hash_function(item) for item in nums if item is not None]
-        )
+        counter = Counter([hash_function(item) for item in nums if item is not None])
         return counter
 
     def plot(self, histogram):
@@ -147,14 +149,13 @@ if __name__ == "__main__":
         NUMSIZE = 5000
         MAXRANGE = 100_000
         a, b = 0, 0
-        a = np.random.randint(1,  10)
+        a = np.random.randint(1, 10)
         b = np.random.randint(10, 100)
         print(f"a value: {a}, b value: {b}")
         hash_table_1 = HashTable(a=a, b=b, capacity=CAPACITY)
         hash_table_2 = HashTable(a=a, b=b, capacity=CAPACITY)
         rng = default_rng()
-        nums = rng.choice(np.arange(0, MAXRANGE), size=NUMSIZE,
-                          replace=False).tolist()
+        nums = rng.choice(np.arange(0, MAXRANGE), size=NUMSIZE, replace=False).tolist()
         print(f"{len(nums)} random integers generated")
         print("Hash Function 1 currently running")
         plt.figure(figsize=(15, 5))
@@ -163,7 +164,8 @@ if __name__ == "__main__":
         histogram_1 = hash_table_1.distribute(hash_table_1.hash_function_1)
         plt.bar(histogram_1.keys(), histogram_1.values())
         plt.title(
-            f'Hash Function 1\nmean: {hash_table_1.mean.round(6)}, std deviation: {hash_table_1.std_dev.round(6)}\nno. of collisions: {hash_table_1.numOfCollisions}\na: {a}, b: {b}')
+            f"Hash Function 1\nmean: {hash_table_1.mean.round(6)}, std deviation: {hash_table_1.std_dev.round(6)}\nno. of collisions: {hash_table_1.numOfCollisions}\na: {a}, b: {b}"
+        )
 
         plt.subplot(1, 2, 2)
         print("Hash Function 2 currently running")
@@ -171,7 +173,8 @@ if __name__ == "__main__":
         histogram_2 = hash_table_2.distribute(hash_table_2.hash_function_2)
         plt.bar(histogram_2.keys(), histogram_2.values())
         plt.title(
-            f'Hash Function 2\nmean: {hash_table_2.mean.round(6)}, std deviation: {hash_table_2.std_dev.round(6)}\nno. of collisions: {hash_table_2.numOfCollisions}\na: {a}, b: {b}')
+            f"Hash Function 2\nmean: {hash_table_2.mean.round(6)}, std deviation: {hash_table_2.std_dev.round(6)}\nno. of collisions: {hash_table_2.numOfCollisions}\na: {a}, b: {b}"
+        )
         plt.tight_layout()
 
         finalMean_1 += hash_table_1.mean
@@ -185,8 +188,10 @@ if __name__ == "__main__":
     print(f"Final standard deviation for Hash Function 1: {finalStdDev_1/10}")
     print(f"Final standard deviation for Hash Function 2: {finalStdDev_2/10}")
     print(
-        f"Final number of collisions for Hash Function 1: {final_numOfCollisions_1/10}")
+        f"Final number of collisions for Hash Function 1: {final_numOfCollisions_1/10}"
+    )
     print(
-        f"Final number of collisions for Hash Function 2: {final_numOfCollisions_2/10}")
+        f"Final number of collisions for Hash Function 2: {final_numOfCollisions_2/10}"
+    )
 
     plt.show()

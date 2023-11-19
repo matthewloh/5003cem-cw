@@ -48,8 +48,7 @@ class PizzaOrderingSystemCLI:
 
     def place_order(self) -> None:
         print("When would you like to place your order? (q to cancel)")
-        date = input(
-            "Enter date or leave blank for today (dd/mm/yyyy): ").strip()
+        date = input("Enter date or leave blank for today (dd/mm/yyyy): ").strip()
         if date == "":
             date = dt.datetime.fromtimestamp(time_obj.time()).strftime(DATEFMT)
         elif date == "q":
@@ -77,8 +76,7 @@ class PizzaOrderingSystemCLI:
                     "Enter date or leave blank for today (dd/mm/yyyy): "
                 ).strip()
                 if date == "":
-                    date = dt.datetime.fromtimestamp(
-                        time_obj.time()).strftime(DATEFMT)
+                    date = dt.datetime.fromtimestamp(time_obj.time()).strftime(DATEFMT)
                 time = (
                     input(
                         "Enter time (hh:mma) or leave blank for current time, e.g: 12:00AM, 12:00PM: "
@@ -89,11 +87,9 @@ class PizzaOrderingSystemCLI:
                     .upper()
                 )
                 if time == "":
-                    time = dt.datetime.fromtimestamp(
-                        time_obj.time()).strftime(TIMEFMT)
+                    time = dt.datetime.fromtimestamp(time_obj.time()).strftime(TIMEFMT)
         unixTimestamp = int(
-            time_obj.mktime(time_obj.strptime(
-                f"{date} {time}", DATE_WITH_TIMEFMT))
+            time_obj.mktime(time_obj.strptime(f"{date} {time}", DATE_WITH_TIMEFMT))
         )
         print(unixTimestamp)
         dateTime = dt.datetime.fromtimestamp(unixTimestamp)
@@ -196,8 +192,7 @@ Pizza {self.pizzaNum + 1} / {num_pizzas}
                 self.pizzaNum += 1
             elif choice == "4":
                 self.customPizzaId = f"CUS{self.order_id}-{self.customPizzaCount}"
-                totalToppings = int(
-                    input("How many toppings would you like to add? "))
+                totalToppings = int(input("How many toppings would you like to add? "))
                 self.toppingOptions = {}
                 self.toppingNum = 0
                 for i in range(totalToppings):
@@ -336,26 +331,22 @@ Topping #{self.toppingNum + 1} / {totalToppings}
                     customerId=self.currentCustomerId,
                     orderId=self.currentOrderId,
                 )
-                self.BST.load_node_details(
-                    node) if node else print("Order not found")
+                self.BST.load_node_details(node) if node else print("Order not found")
             elif choice == "2":
                 print("Searching orders before today")
                 node = self.BST.go_before_today_until_customerId_or_orderId(
                     customerId=self.currentCustomerId, orderId=self.currentOrderId
                 )
-                self.BST.load_node_details(
-                    node) if node else print("Order not found")
+                self.BST.load_node_details(node) if node else print("Order not found")
             elif choice == "3":
                 print("Searching orders after today")
                 node = self.BST.go_after_today_until_customerId_or_orderId(
                     customerId=self.currentCustomerId, orderId=self.currentOrderId
                 )
-                self.BST.load_node_details(
-                    node) if node else print("Order not found")
+                self.BST.load_node_details(node) if node else print("Order not found")
             elif choice == "q":
                 print("View order by order id")
-                self.BST.view_order_details_by_order_id(
-                    orderId=self.currentOrderId)
+                self.BST.view_order_details_by_order_id(orderId=self.currentOrderId)
             elif choice == "w":
                 print("Viewing order(s) by customer id")
                 self.BST.view_order_details_by_customer_id(
